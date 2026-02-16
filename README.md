@@ -1,9 +1,10 @@
 # Sportkalender
 
-Sportkalender ist ein Fußball-Spielplan-Projekt mit zwei Frontends:
+Sportkalender ist ein Fußball-Spielplan-Projekt mit drei Frontends:
 
 - Web/PWA (`index.html`)
 - Native Android-App in Kotlin + Jetpack Compose (`android-native`)
+- Native iOS-App in SwiftUI (`ios-native`)
 
 Es zeigt Spiele (u. a. Bundesliga, DFB-Pokal, Champions League), Wochennavigation und TV-Zuordnungen.
 
@@ -12,8 +13,10 @@ Es zeigt Spiele (u. a. Bundesliga, DFB-Pokal, Champions League), Wochennavigatio
 - `index.html`: Web-App (PWA-fähig)
 - `manifest.json`, `sw.js`: PWA-Manifest/Service Worker
 - `android-native/`: Native Android-App (Gradle/Compose)
+- `ios-native/`: Native iOS-App (SwiftUI/Xcode)
 - `README-PWA.md`: Hinweise zu PWA-Icons und Test
 - `android-native/README.md`: Android-spezifische Build/Release-Hinweise
+- `ios-native/README.md`: iOS-spezifische Build/Run-Hinweise
 
 ## Features
 
@@ -52,6 +55,15 @@ APK-Ausgaben:
 
 - Debug: `android-native/app/build/outputs/apk/debug/`
 - Release: `android-native/app/build/outputs/apk/release/`
+
+## iOS-App öffnen und starten
+
+```bash
+cd /Users/nico/Documents/Development/sportkalender/ios-native
+open SportkalenderiOS.xcodeproj
+```
+
+Dann in Xcode Scheme `SportkalenderiOS` auf Simulator oder iPhone starten.
 
 ## Android Release-Signing
 

@@ -18,6 +18,11 @@ Main dependencies (via Gradle/Maven):
 - Kotlin Coroutines: Apache-2.0
 - Desugar JDK libs: Android SDK terms / open source components
 
+## iOS app (`ios-native`)
+
+- Built with Apple SwiftUI/Foundation (Apple SDKs and Xcode tools).
+- Distribution and build usage are subject to Apple developer terms.
+
 ## Data and trademarks
 
 - Match data and broadcast information are external content and are not relicensed by this repository.

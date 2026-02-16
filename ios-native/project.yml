@@ -1,0 +1,41 @@
+name: SportkalenderiOS
+options:
+  minimumXcodeGenVersion: 2.38.0
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: de.sportkalender.ios
+    SWIFT_VERSION: "5.9"
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0.0
+targets:
+  SportkalenderiOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/SportkalenderiOS
+    resources:
+      - path: Resources
+    settings:
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: Sportkalender
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleDefault
+        INFOPLIST_KEY_UIUserInterfaceStyle: Light
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+schemes:
+  SportkalenderiOS:
+    build:
+      targets:
+        SportkalenderiOS: all
+    run:
+      config: Debug
+    archive:
+      config: Release
