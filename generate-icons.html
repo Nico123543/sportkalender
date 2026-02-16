@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icons generieren</title></head>
+<body>
+<h1>PWA Icons generieren</h1>
+<p>Öffne die Konsole und klicke auf die Buttons unten</p>
+<button onclick="generateIcon(192)">Icon 192x192</button>
+<button onclick="generateIcon(512)">Icon 512x512</button>
+<script>
+function generateIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Hintergrund
+  ctx.fillStyle = '#2563eb';
+  ctx.fillRect(0, 0, size, size);
+
+  // Fußball (weiß)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fußball-Fünfecke
+  ctx.fillStyle = '#2563eb';
+  const pentagonSize = size * 0.08;
+  const angles = [0, 72, 144, 216, 288];
+  angles.forEach(angle => {
+    const rad = (angle - 90) * Math.PI / 180;
+    const x = size/2 + Math.cos(rad) * size * 0.18;
+    const y = size/2 + Math.sin(rad) * size * 0.18;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = (angle + i * 72 - 90) * Math.PI / 180;
+      const px = x + Math.cos(a) * pentagonSize;
+      const py = y + Math.sin(a) * pentagonSize;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  });
+
+  // Download
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `icon-${size}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+</script>
+</body>
+</html>

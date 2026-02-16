@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Temp
+.tmp/
+
+# Android / Gradle
+android-native/.gradle/
+android-native/.gradle-home/
+android-native/build/
+android-native/app/build/
+android-native/local.properties
+android-native/keystore.properties
+
+# IntelliJ / Android Studio
+.idea/
+*.iml

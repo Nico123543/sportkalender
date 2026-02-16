@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Football Kalender – Bundesliga, DFB-Pokal & mehr</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Sportkalender" />
+  <meta name="description" content="Spieleplan für Bundesliga, DFB-Pokal und Champions League mit TV-Informationen" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+    :root{
+      font-family:'DM Sans',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      --accent:#0f5eea;--accent-dark:#0b48b3;--accent-soft:#dce9ff;
+      --green:#059669;--red:#dc2626;
+      --ink:#102033;--ink-soft:#4d5f75;
+      --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+      --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
+      --gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;
+      --surface:#ffffffd9;--surface-solid:#fff;
+      --shadow:0 24px 48px rgba(16,32,51,.14);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:24px;
+      color:var(--ink);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 2% 8%, #e0ebff 0%, transparent 42%),
+        radial-gradient(circle at 98% 2%, #d7f6ef 0%, transparent 34%),
+        linear-gradient(165deg, #eff4fc 0%, #f7fafc 45%, #eef2f8 100%);
+    }
+    .app-shell{
+      max-width:1260px;
+      margin:0 auto;
+      padding:20px;
+      border:1px solid #d8e1ef;
+      border-radius:24px;
+      background:var(--surface);
+      backdrop-filter:blur(6px);
+      box-shadow:var(--shadow);
+      animation:fade-in .45s ease;
+    }
+    .hero{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:16px;
+      margin-bottom:12px;
+    }
+    h1{margin:0 0 4px;font-size:30px;font-weight:800;letter-spacing:-.6px;color:#0a2242}
+    .subtitle{font-size:14px;color:var(--ink-soft);margin:0}
+    .meta-pill{
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--accent-soft);
+      color:#164ea8;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.3px;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:end;
+      margin:12px 0 16px;
+      padding:12px;
+      border-radius:14px;
+      background:#f6f9ff;
+      border:1px solid #dfe8f8;
+    }
+    label{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px}
+    input,select,button{
+      padding:10px 14px;
+      font-size:14px;
+      border-radius:10px;
+      border:1px solid #cdd8ec;
+      font-family:inherit;
+      background:#fff;
+      color:var(--ink);
+      transition:border-color .2s, box-shadow .2s, transform .15s;
+    }
+    input:focus,select:focus,button:focus{outline:none;box-shadow:0 0 0 3px rgba(15,94,234,.18);border-color:var(--accent)}
+    select{cursor:pointer}
+    button{cursor:pointer;background:var(--accent);color:#fff;border:none;font-weight:700;letter-spacing:.1px}
+    button:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,94,234,.25)}
+    button:active{transform:translateY(0)}
+    button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .error{color:var(--red);white-space:pre-wrap;margin-top:12px;font-size:13px;padding:10px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca}
+    .error:empty{display:none}
+
+    #out{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:12px}
+    .day-column{
+      border:1px solid #dde4f2;
+      border-radius:14px;
+      padding:14px;
+      min-height:180px;
+      background:var(--surface-solid);
+      transition:border-color .2s, box-shadow .2s, transform .2s;
+      animation:rise .35s ease both;
+    }
+    .day-column:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(16,32,51,.08)}
+    .day-column.today{border-color:var(--accent);border-width:2px;background:#f2f7ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .day-header{font-weight:700;font-size:14px;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center}
+    .day-header.today{color:var(--accent)}
+    .day-date{font-size:13px;color:var(--gray-600);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--gray-100);font-weight:500}
+
+    .match-card{background:var(--gray-50);border:1px solid #dbe4f2;border-radius:10px;padding:10px;margin:8px 0;font-size:12px;transition:all .15s;position:relative}
+    .match-card:hover{border-color:var(--accent);box-shadow:0 8px 16px rgba(11,72,179,.11);transform:translateY(-1px)}
+    .match-time{
+      font-weight:800;color:#173663;font-size:13px;font-variant-numeric:tabular-nums;position:absolute;top:10px;right:10px;
+      background:#f4f7fe;padding:4px 8px;border-radius:7px;border:1px solid #cedaf1
+    }
+    .match-teams{margin:5px 0;font-weight:600;line-height:1.4;font-size:13px}
+    .match-score{font-weight:700;font-size:14px;margin-top:5px}
+    .match-score.finished{color:var(--green)}
+    .match-score.upcoming{color:var(--accent);font-weight:500;font-size:12px}
+    .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;margin-bottom:5px;letter-spacing:.3px}
+    .badge-bundesliga{background:#dbeafe;color:#1e40af;border:1px solid #b8cdfa}
+
+    .match-tv{margin-top:7px;display:flex;flex-wrap:wrap;gap:4px}
+    .tv-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.2px}
+    .tv-free{background:#dcfce7;color:#14532d;border:1px solid #86efac}
+    .tv-pay{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+    .tv-dazn{background:#0d1b2a;color:#f5c518;border:1px solid #f5c518}
+    .tv-sky{background:#1a1a2e;color:#fff;border:1px solid #4a4a6a}
+    .tv-icon{font-size:11px}
+
+    .loading-state{opacity:.6;pointer-events:none}
+    .no-matches{color:var(--gray-400);font-size:13px;font-style:italic;text-align:center;padding:40px 0}
+    .status-bar{display:flex;gap:16px;font-size:13px;color:var(--ink-soft);margin:8px 0;flex-wrap:wrap;align-items:center}
+    .week-info{font-size:13px;color:#26476c;margin:8px 0;font-weight:700}
+    .match-count{font-size:11px;color:var(--gray-400);text-align:center;margin-top:10px}
+
+    .nav-buttons{display:flex;gap:8px;align-items:center}
+    .nav-btn{padding:8px 16px;font-size:13px;background:#4a607d}
+    .nav-btn:hover{background:#334a67}
+
+    .epg-bar{font-size:12px;padding:10px 14px;border-radius:10px;margin:10px 0;font-weight:600;display:flex;align-items:center;gap:8px}
+    .epg-bar.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .epg-bar.pending{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+    .epg-bar.fail{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+
+    .hint{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:6px;max-width:900px}
+    .hint a{color:var(--accent);text-decoration:none}
+    .hint a:hover{text-decoration:underline}
+
+    .rights-info{font-size:11px;color:#5d6c7f;margin-top:14px;padding:12px;background:var(--gray-50);border-radius:10px;border:1px solid #dce4ef;line-height:1.6}
+    .rights-info summary{cursor:pointer;font-weight:700;color:#36506f;font-size:12px}
+
+    @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:600px){
+      body{padding:10px;font-size:16px}
+      .app-shell{padding:14px;border-radius:16px}
+      .hero{flex-direction:column;align-items:flex-start;gap:8px}
+      h1{font-size:24px}
+      .subtitle{font-size:14px}
+      .meta-pill{font-size:11px}
+      #out{grid-template-columns:1fr}
+      .row{flex-direction:column;align-items:stretch;gap:8px}
+      .nav-buttons{justify-content:center;flex-wrap:wrap}
+      .nav-buttons button{font-size:14px;padding:12px 16px;min-height:44px}
+      label{font-size:13px}
+      select,input,button{font-size:16px;padding:12px 14px;min-height:44px}
+      .day-column{padding:12px}
+      .day-header{font-size:15px;flex-direction:column;align-items:flex-start;gap:4px}
+      .day-date{font-size:14px;color:var(--gray-700);border:none;padding:0;margin:0}
+      .match-card{padding:12px;padding-top:40px}
+      .match-time{font-size:15px;top:8px;right:8px;padding:5px 10px}
+      .match-teams{font-size:14px}
+      .match-score{font-size:16px}
+      .tv-badge{font-size:11px;padding:3px 8px}
+      .hint{font-size:13px}
+      .hint a{display:inline-block;word-break:break-word}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none!important;transition:none!important}
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <div class="hero">
+      <div>
+        <h1>📅 Football Kalender</h1>
+        <div class="subtitle">Spielplan mit TV-Übertragungen</div>
+      </div>
+      <div class="meta-pill">Live TV Mapping</div>
+    </div>
+    <div class="row">
+      <label>Liga
+        <select id="leagueSelect">
+          <option value="bl1">Bundesliga 1</option>
+          <option value="bl2">Bundesliga 2</option>
+          <option value="bl3">Bundesliga 3</option>
+          <option value="dfb">DFB-Pokal</option>
+          <option value="ucl">Champions League</option>
+        </select>
+      </label>
+      <label>Saison
+        <select id="seasonSelect">
+          <option value="2025">2025/26</option>
+          <option value="2024">2024/25</option>
+          <option value="2023">2023/24</option>
+        </select>
+      </label>
+      <div class="nav-buttons">
+        <button id="prevWeek" class="nav-btn">◀ Vorwoche</button>
+        <button id="todayBtn">Heute</button>
+        <button id="nextWeek" class="nav-btn">Nächste ▶</button>
+        <button id="exportPdf" style="background:var(--green)">📄 PDF</button>
+      </div>
+    </div>
+
+    <div class="hint">
+      Spieldaten: <a href="https://www.openligadb.de/" target="_blank">OpenLigaDB</a> ·
+      TV-Zuordnung: Basierend auf den offiziellen
+      <a href="https://www.bundesliga.com/de/bundesliga/news/bundesliga-im-fernsehen-tv-sender-363" target="_blank">DFL-Senderechten</a>
+      (Wochentag + Anstoßzeit → Sender)
+    </div>
+    <div id="epgBar" class="epg-bar ok">📺 TV-Sender werden anhand der DFL-Senderechte zugeordnet</div>
+    <div id="statusBar" class="status-bar"></div>
+    <div id="weekInfo" class="week-info"></div>
+    <div id="error" class="error"></div>
+    <div id="out"></div>
+
+    <details class="rights-info">
+      <summary>ℹ️ Senderechte-Übersicht (Stand: Saison 2025/26)</summary>
+      <br>
+      <b>Bundesliga 1. Liga:</b><br>
+      🔵 Freitag 20:30 → Sky · Einzelne Spiele auf SAT.1 (Free-TV)<br>
+      🔵 Samstag 15:30 → Sky (Einzel) · DAZN (Konferenz)<br>
+      🔵 Samstag 18:30 → Sky (Topspiel)<br>
+      🟡 Sonntag 15:30 / 17:30 / 19:30 → DAZN<br>
+      🔵 Englische Wochen (Di/Mi) → Sky (Einzel) · DAZN (Konferenz)<br>
+      📺 Highlights: ARD Sportschau (Sa), ZDF Sportstudio (Sa spät)<br>
+      <br>
+      <b>2. Bundesliga:</b><br>
+      🔵 Alle Spiele → Sky<br>
+      📺 Samstag 20:30 Topspiel → RTL (Free-TV)<br>
+      <br>
+      <b>DFB-Pokal:</b><br>
+      📺 ARD/ZDF (ausgewählte Spiele, Free-TV) + Sky (alle Spiele)<br>
+      <br>
+      <b>Champions League:</b><br>
+      🟡 DAZN (fast alle Spiele) · ZDF (ausgewählte Di-Spiele) · Amazon Prime (Di-Topspiel)<br>
+      <br>
+      <small>Quelle: <a href="https://www.bundesliga.com/de/bundesliga/news/dfl-medienrechte-vergabe-tv-partner-clubs-saison-25-26-28-29-29352" target="_blank">DFL Medienrechte-Vergabe 2025–2029</a></small>
+    </details>
+  </main>
+
+<script>
+const $=id=>document.getElementById(id);
+const API="https://api.openligadb.de";
+
+let currentSeason="2025",currentLeague="bl1",allMatches=[],
+    lastSeason="",lastLeague="",weekOffset=0;
+
+/* ═══════════════════════════════════════════════════════════════
+   SENDERECHTE-KONFIGURATION
+   
+   Basiert auf den offiziellen DFL-Medienrechten.
+   Funktioniert wie eine Fernsehzeitschrift: Wochentag + Uhrzeit → Sender.
+   
+   Wird NICHT pro Spiel gecoded, sondern bildet die Rechtestruktur ab.
+   Bei neuer Rechtevergabe (alle 4 Jahre) einfach hier updaten.
+   
+   Format pro Regel:
+   { day: 0-6 (So-Sa), hour: Stunde, minute: Minute,
+     channels: [{name, free, css?}], note?: "..." }
+   
+   day: 0=Sonntag, 1=Montag, 2=Dienstag, ... 5=Freitag, 6=Samstag
+   ═══════════════════════════════════════════════════════════════ */
+
+const BROADCAST_RIGHTS = {
+
+  // ── BUNDESLIGA 1. Liga ──────────────────────────────
+  bl1: {
+    // Saison 2025/26 bis 2028/29 (neuer Rechtevertrag)
+    '2025': [
+      { day:5, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}], note:'ggf. SAT.1 bei Eröffnungs-/Sonderspielen' },
+      { day:6, hour:15, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'},{name:'DAZN Konf.',free:false,css:'tv-dazn'}] },
+      { day:6, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}], note:'Topspiel' },
+      { day:0, hour:15, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:0, hour:17, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:0, hour:19, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      // Englische Wochen
+      { day:2, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:2, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:3, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:3, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:4, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}], note:'Nachholspiel/engl. Woche' },
+    ],
+    // Saison 2024/25 (alter Rechtevertrag)
+    '2024': [
+      { day:5, hour:20, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:6, hour:15, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}], note:'Topspiel' },
+      { day:0, hour:15, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:0, hour:17, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:0, hour:19, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:2, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:2, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:3, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:3, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+    ],
+    '2023': [
+      { day:5, hour:20, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:6, hour:15, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:0, hour:15, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:0, hour:17, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:0, hour:19, minute:30, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+      { day:2, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:3, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+    ],
+  },
+
+  // ── 2. BUNDESLIGA ──────────────────────────────────
+  bl2: {
+    '2025': [
+      { day:5, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:13, minute:0,  channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'},{name:'RTL',free:true}], note:'Topspiel Free-TV auf RTL' },
+      { day:0, hour:13, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+    ],
+    '2024': [
+      { day:5, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:13, minute:0,  channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'},{name:'Sport1',free:true}] },
+      { day:0, hour:13, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+    ],
+    '2023': [
+      { day:5, hour:18, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:13, minute:0,  channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+      { day:6, hour:20, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'},{name:'Sport1',free:true}] },
+      { day:0, hour:13, minute:30, channels:[{name:'Sky',free:false,css:'tv-sky'}] },
+    ],
+  },
+
+  // ── 3. LIGA ──────────────────────────────────
+  bl3: {
+    '2025': [
+      { day:5, hour:19, minute:0,  channels:[{name:'MagentaSport',free:false}] },
+      { day:6, hour:14, minute:0,  channels:[{name:'MagentaSport',free:false}] },
+      { day:6, hour:16, minute:30, channels:[{name:'MagentaSport',free:false}] },
+      { day:0, hour:13, minute:30, channels:[{name:'MagentaSport',free:false}] },
+      { day:0, hour:16, minute:30, channels:[{name:'MagentaSport',free:false}] },
+      { day:0, hour:19, minute:30, channels:[{name:'MagentaSport',free:false}] },
+    ],
+    '2024': [
+      { day:5, hour:19, minute:0,  channels:[{name:'MagentaSport',free:false}] },
+      { day:6, hour:14, minute:0,  channels:[{name:'MagentaSport',free:false}] },
+      { day:0, hour:13, minute:30, channels:[{name:'MagentaSport',free:false}] },
+      { day:0, hour:16, minute:30, channels:[{name:'MagentaSport',free:false}] },
+    ],
+    '2023': [
+      { day:5, hour:19, minute:0,  channels:[{name:'MagentaSport',free:false}] },
+      { day:6, hour:14, minute:0,  channels:[{name:'MagentaSport',free:false}] },
+      { day:0, hour:13, minute:30, channels:[{name:'MagentaSport',free:false}] },
+    ],
+  },
+
+  // ── DFB-POKAL ──────────────────────────────────
+  dfb: {
+    '2025': [{ day:-1, channels:[{name:'ARD/ZDF',free:true},{name:'Sky',free:false,css:'tv-sky'}], note:'Free-TV: ausgewählte Spiele' }],
+    '2024': [{ day:-1, channels:[{name:'ARD/ZDF',free:true},{name:'Sky',free:false,css:'tv-sky'}], note:'Free-TV: ausgewählte Spiele' }],
+    '2023': [{ day:-1, channels:[{name:'ARD/ZDF',free:true},{name:'Sky',free:false,css:'tv-sky'}], note:'Free-TV: ausgewählte Spiele' }],
+  },
+
+  // ── CHAMPIONS LEAGUE ──────────────────────────────
+  ucl: {
+    '2025': [
+      { day:2, hour:21, minute:0, channels:[{name:'DAZN',free:false,css:'tv-dazn'},{name:'Amazon Prime',free:false}], note:'Di-Topspiel auf Amazon, ggf. ZDF' },
+      { day:3, hour:21, minute:0, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+    ],
+    '2024': [
+      { day:2, hour:21, minute:0, channels:[{name:'DAZN',free:false,css:'tv-dazn'},{name:'Amazon Prime',free:false}], note:'Di-Topspiel auf Amazon, ggf. ZDF' },
+      { day:3, hour:21, minute:0, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+    ],
+    '2023': [
+      { day:2, hour:21, minute:0, channels:[{name:'DAZN',free:false,css:'tv-dazn'},{name:'Amazon Prime',free:false}] },
+      { day:3, hour:21, minute:0, channels:[{name:'DAZN',free:false,css:'tv-dazn'}] },
+    ],
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   TV-ZUORDNUNG: Anstoßzeit → Sender(e)
+   ═══════════════════════════════════════════════════════════════ */
+
+function getTV(match, league, season) {
+  if (!match.matchDateTime) return [];
+
+  const dt = new Date(match.matchDateTime);
+  const dayOfWeek = dt.getDay(); // 0=So, 1=Mo, ... 6=Sa
+  const hour = dt.getHours();
+  const minute = dt.getMinutes();
+
+  // Rechte für Liga + Saison holen
+  const leagueRights = BROADCAST_RIGHTS[league];
+  if (!leagueRights) return [];
+
+  const seasonRights = leagueRights[season] || leagueRights[Object.keys(leagueRights)[0]];
+  if (!seasonRights) return [];
+
+  // Beste Regel finden: day=-1 ist Wildcard (für DFB-Pokal etc.)
+  let bestMatch = null;
+  let bestDiff = Infinity;
+
+  for (const rule of seasonRights) {
+    if (rule.day === -1) {
+      // Wildcard: passt immer, aber mit niedrigster Priorität
+      if (!bestMatch || bestMatch.day === -1) bestMatch = rule;
+      continue;
+    }
+    if (rule.day !== dayOfWeek) continue;
+
+    // Zeitdifferenz berechnen (in Minuten)
+    if (rule.hour === undefined) {
+      // Nur Tag-Match, kein Zeitfilter
+      bestMatch = rule;
+      bestDiff = 0;
+      continue;
+    }
+    const ruleMin = rule.hour * 60 + (rule.minute || 0);
+    const matchMin = hour * 60 + minute;
+    const diff = Math.abs(ruleMin - matchMin);
+
+    // Toleranz: ±60 Minuten (Anstoßzeiten können leicht variieren)
+    if (diff <= 60 && diff < bestDiff) {
+      bestDiff = diff;
+      bestMatch = rule;
+    }
+  }
+
+  if (!bestMatch) return [];
+
+  return bestMatch.channels.map(ch => ({
+    sender: ch.name,
+    isFree: !!ch.free,
+    css: ch.css || (ch.free ? 'tv-free' : 'tv-pay'),
+    note: bestMatch.note || ''
+  }));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TV-ANZEIGE
+   ═══════════════════════════════════════════════════════════════ */
+
+function getAllTV(match, league, season) {
+  return getTV(match, league, season);
+}
+
+function tvHtml(match, league, season) {
+  const channels = getAllTV(match, league, season);
+  if (!channels.length) return '';
+
+  // Free-TV zuerst, dann Pay
+  const sorted = [...channels].sort((a, b) => (b.isFree ? 1 : 0) - (a.isFree ? 1 : 0));
+
+  return '<div class="match-tv">' + sorted.map(b => {
+    const cls = b.css || 'tv-pay';
+    const ico = b.isFree ? '<span class="tv-icon">📺</span> ' : '';
+    return `<span class="tv-badge ${cls}">${ico}${b.sender}</span>`;
+  }).join('') + '</div>';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   OPENLIGADB + RENDER
+   ═══════════════════════════════════════════════════════════════ */
+
+function dateToday() { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; }
+function addW(ds, w) { const d = new Date(ds); d.setDate(d.getDate() + w * 7); return fmtISO(d); }
+function weekDays(ds) { const s = new Date(ds), a = []; for (let i = 0; i < 7; i++) { const d = new Date(s); d.setDate(s.getDate() + i); a.push(d); } return a; }
+function fmtDate(d) { return d.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit' }); }
+function fmtISO(d) {
+  if (typeof d === 'string') return d;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isToday(d) { const t = new Date(); return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear(); }
+
+async function fetchMatches(league, season) {
+  $('statusBar').innerHTML = `Lade ${league.toUpperCase()}…`;
+  const r = await fetch(`${API}/getmatchdata/${league}/${season}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return await r.json() || [];
+}
+
+function render(days, matches) {
+  const out = $('out'); out.innerHTML = '';
+  const byDay = {};
+  days.forEach(d => byDay[fmtISO(d)] = []);
+  matches.forEach(m => {
+    if (!m.matchDateTime) return;
+    const md = new Date(m.matchDateTime);
+    if (isNaN(md)) return;
+    const k = fmtISO(md);
+    if (byDay[k]) byDay[k].push(m);
+  });
+
+  let total = 0;
+  const leagueNames = { bl1: 'Bundesliga', bl2: '2. Bundesliga', bl3: '3. Liga', dfb: 'DFB-Pokal', ucl: 'Champions League' };
+
+  for (const day of days) {
+    const ms = byDay[fmtISO(day)] || [];
+    if (!ms.length) continue;
+    total += ms.length;
+
+    const col = document.createElement('div');
+    col.className = 'day-column' + (isToday(day) ? ' today' : '');
+
+    const hdr = document.createElement('div');
+    hdr.className = 'day-header' + (isToday(day) ? ' today' : '');
+    hdr.innerHTML = `<span>${day.toLocaleDateString('de-DE', { weekday: 'short' })}</span>
+      <span class="day-date">${day.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>`;
+    col.appendChild(hdr);
+
+    ms.sort((a, b) => new Date(a.matchDateTime) - new Date(b.matchDateTime));
+
+    for (const m of ms) {
+      const home = m.team1?.teamName || 'Home';
+      const away = m.team2?.teamName || 'Away';
+      const md = new Date(m.matchDateTime);
+      const time = md.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+      let score = '';
+      if (m.matchIsFinished) {
+        const fr = m.matchResults?.find(r => r.resultTypeID === 2);
+        if (fr && fr.pointsTeam1 != null) score = `<div class="match-score finished">${fr.pointsTeam1}:${fr.pointsTeam2}</div>`;
+      } else {
+        score = '<div class="match-score upcoming">vs</div>';
+      }
+
+      const card = document.createElement('div');
+      card.className = 'match-card';
+      card.innerHTML = `<span class="badge badge-bundesliga">${leagueNames[currentLeague] || currentLeague}</span>
+        <div class="match-time">${time}</div>
+        <div class="match-teams">${home} vs ${away}</div>
+        ${score}${tvHtml(m, currentLeague, currentSeason)}`;
+      col.appendChild(card);
+    }
+
+    const cnt = document.createElement('div');
+    cnt.className = 'match-count';
+    cnt.textContent = `${ms.length} Spiel(e)`;
+    col.appendChild(cnt);
+    out.appendChild(col);
+  }
+
+  if (!out.children.length) out.innerHTML = '<div class="no-matches">Keine Spiele in dieser Woche</div>';
+  $('weekInfo').innerHTML = `📅 ${fmtDate(days[0])} – ${fmtDate(days[6])} · ${total} Spiel(e)`;
+}
+
+function hasMatches(days, ms) {
+  const s = days[0], e = new Date(days[6]); e.setHours(23, 59, 59, 999);
+  return ms.some(m => { if (!m.matchDateTime) return false; const d = new Date(m.matchDateTime); return !isNaN(d) && d >= s && d <= e; });
+}
+
+async function loadWeek() {
+  $('error').textContent = ''; $('out').innerHTML = ''; $('weekInfo').innerHTML = '';
+  currentLeague = $('leagueSelect').value;
+  currentSeason = $('seasonSelect').value;
+
+  document.body.classList.add('loading-state');
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+
+  try {
+    if (!allMatches.length || lastSeason !== currentSeason || lastLeague !== currentLeague) {
+      allMatches = await fetchMatches(currentLeague, currentSeason);
+      lastSeason = currentSeason; lastLeague = currentLeague;
+      $('statusBar').innerHTML = `✓ ${allMatches.length} Spiele geladen`;
+    }
+
+    let days = weekDays(dateToday());
+
+    if (!hasMatches(days, allMatches) && allMatches.length) {
+      const now = new Date();
+      let closest = null, closestDist = Infinity;
+      for (const m of allMatches) {
+        if (!m.matchDateTime) continue;
+        const md = new Date(m.matchDateTime);
+        if (isNaN(md)) continue;
+        const dist = Math.abs(md - now);
+        if (dist < closestDist) { closestDist = dist; closest = md; }
+      }
+      if (closest) {
+        $('statusBar').innerHTML += ' · Springe zum nächsten Spieltag…';
+        const mon = new Date(closest);
+        mon.setDate(mon.getDate() - mon.getDay() + 1);
+        days = weekDays(fmtISO(mon));
+      }
+    }
+
+    render(days, allMatches);
+  } catch (e) {
+    $('error').textContent = e.message || String(e);
+  } finally {
+    document.body.classList.remove('loading-state');
+    document.querySelectorAll('button').forEach(b => b.disabled = false);
+  }
+}
+
+async function loadWeekForDate(ds) {
+  const days = weekDays(ds);
+  document.body.classList.add('loading-state');
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    render(days, allMatches);
+  } finally {
+    document.body.classList.remove('loading-state');
+    document.querySelectorAll('button').forEach(b => b.disabled = false);
+  }
+}
+
+$('seasonSelect').onchange = () => { allMatches = []; loadWeek(); };
+$('leagueSelect').onchange = () => {
+  allMatches = [];
+  if ($('leagueSelect').value === 'ucl') $('seasonSelect').value = '2025';
+  loadWeek();
+};
+$('prevWeek').onclick = () => { weekOffset--; loadWeekForDate(addW(dateToday(), weekOffset)); };
+$('nextWeek').onclick = () => { weekOffset++; loadWeekForDate(addW(dateToday(), weekOffset)); };
+$('todayBtn').onclick = () => { weekOffset = 0; loadWeek(); };
+
+/* PDF */
+$('exportPdf').onclick = async () => {
+  document.body.classList.add('loading-state');
+  try {
+    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+    const lgs = [{ c: 'bl1', n: 'Bundesliga' }, { c: 'dfb', n: 'DFB-Pokal' }, { c: 'ucl', n: 'Champions League' }];
+    let y = 20; const pH = doc.internal.pageSize.height, m = 20;
+    doc.setFontSize(20); doc.text('Football Spielplan', m, y); y += 15;
+    doc.setFontSize(10); doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')}`, m, y); y += 15;
+
+    for (const lg of lgs) {
+      const data = await fetchMatches(lg.c, currentSeason);
+      if (y > pH - 30) { doc.addPage(); y = 20; }
+      doc.setFontSize(14); doc.setFont(undefined, 'bold');
+      doc.text(`${lg.n} ${currentSeason}/${+currentSeason + 1}`, m, y); y += 10;
+      doc.setFontSize(10); doc.setFont(undefined, 'normal');
+
+      const bd = {};
+      data.forEach(mt => { if (mt.matchDateTime) { const d = new Date(mt.matchDateTime), k = fmtISO(d); if (!bd[k]) bd[k] = []; bd[k].push(mt); } });
+
+      for (const k of Object.keys(bd).sort()) {
+        if (y > pH - 50) { doc.addPage(); y = 20; }
+        doc.setFont(undefined, 'bold'); doc.text(fmtDate(new Date(k)), m, y); y += 7; doc.setFont(undefined, 'normal');
+        for (const mt of bd[k]) {
+          if (y > pH - 25) { doc.addPage(); y = 20; }
+          const h = mt.team1?.teamName || '?', a = mt.team2?.teamName || '?';
+          const t = new Date(mt.matchDateTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+          let sc = ''; if (mt.matchIsFinished) { const fr = mt.matchResults?.find(r => r.resultTypeID === 2); if (fr) sc = ` (${fr.pointsTeam1}:${fr.pointsTeam2})`; }
+          const tv = getAllTV(mt, lg.c, currentSeason);
+          const tvS = tv.length ? ' [' + tv.map(b => (b.isFree ? '📺 ' : '') + b.sender).join(', ') + ']' : '';
+          doc.text(`  ${t} ${h} vs ${a}${sc}${tvS}`, m, y); y += 6;
+        }
+        y += 4;
+      }
+      y += 10;
+    }
+    doc.save(`spielplan_${currentSeason}.pdf`);
+  } catch (e) { $('error').textContent = 'PDF: ' + e.message; }
+  finally { document.body.classList.remove('loading-state'); }
+};
+
+/* INIT */
+loadWeek();
+
+/* PWA SERVICE WORKER REGISTRATION */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(registration => {
+        console.log('Service Worker registriert:', registration.scope);
+      })
+      .catch(error => {
+        console.log('Service Worker Registrierung fehlgeschlagen:', error);
+      });
+  });
+}
+</script>
+</body>
+</html>
