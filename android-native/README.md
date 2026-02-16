@@ -50,3 +50,11 @@ In dieser Umgebung ist `lint` für Release aktuell deaktiviert (`checkReleaseBui
 da es mit der lokalen JDK-/AGP-Kombination zu einem bekannten Fehler kommen kann.
 
 Für CI/Store-Deployment solltest du Lint wieder aktivieren, sobald Toolchain-Versionen sauber abgestimmt sind.
+
+## Lizenz
+
+Der Quellcode steht unter MIT:
+`/Users/nico/Documents/Development/sportkalender/LICENSE`
+
+Hinweise zu Drittanbieter-Lizenzen und externen Datenquellen:
+`/Users/nico/Documents/Development/sportkalender/THIRD_PARTY_NOTICES.md`

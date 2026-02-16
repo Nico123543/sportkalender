@@ -23,3 +23,11 @@ Nachdem die Icons erstellt wurden:
 3. Gehe zum "Application" Tab
 4. Prüfe unter "Manifest" und "Service Workers"
 5. Die App sollte installierbar sein (Symbol in der Adressleiste)
+
+## Lizenz
+
+Der Quellcode dieses Repositories steht unter MIT:
+`/Users/nico/Documents/Development/sportkalender/LICENSE`
+
+Drittanbieter-Lizenzen und externe Datenquellen:
+`/Users/nico/Documents/Development/sportkalender/THIRD_PARTY_NOTICES.md`
