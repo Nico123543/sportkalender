@@ -18,6 +18,7 @@ android-native/keystore.properties
 
 # Xcode / iOS
 DerivedData/
+ios-native/.derived/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 ios-native/build/

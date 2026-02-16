@@ -19,6 +19,7 @@ targets:
       - path: Resources
     settings:
       base:
+        GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: Sportkalender
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
